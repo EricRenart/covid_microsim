@@ -5,12 +5,23 @@ from enums import COVIDState, STATE_COLORS
 
 class Simulation():
 
-    def __init__(self, size_x=1000, size_y=1000):
+    def __init__(self, size_x=100, size_y=100):
         self.size_x = size_x
         self.size_y = size_y
         self.t = 0
         self.grid = np.ndarray((size_x, size_y), dtype=Person)
         self.grid.fill(Nobody())
+        self.next_available_id = 1
+        self.exposure_distance = 6 # distance individuals must be within each other to get exposed. Individuals will try to stay greater than this value apart from each other on the grid, based on their social distancing adherece
+
+        # Number of people in each state
+        self.susceptible = 0
+        self.infected = 0
+        self.exposed = 0
+        self.hospitalized = 0
+        self.critical = 0
+        self.dead = 0
+        self.recovered = 0
 
     def __str__(self):
         size = self.grid.size
@@ -18,22 +29,42 @@ class Simulation():
         ind_list = self.list_individuals()
         return '{}x{} grid, {} total slots, \n{} individuals present: \n{}'.format(self.size_x, self.size_y, size, population, ind_list)
 
+    def run(self, pop=50, length=100):
+        for i in range(0, pop):
+            self.add_individual_at_random_location() # Add initial individuals to grid
+        print('Running COVID-19 microsimulation with population of {}...'.format(self.population()))
+        print('Initial Conditions:\n')
+        print(self.list_individuals())
+        print('Starting simulation.')
+        for i in range(0, length-1):
+            self.step()
+            print('t = {}, susc = {}, exp = {}, inf = {}, hosp = {}, crit = {}, dead = {}, recov={}'.format(self.t, self.susceptible, self.exposed, self.infected, self.hospitalized, self.critical, self.dead, self.recovered))
+        print('SIMULATION COMPLETE!')
+        print('Final Results by individual:')
+        self.list_individuals()
+        self.plot()
+
+    def step(self):
+        self.t += 1 # Advance the simulation by one time unit
+        self.update_positions() # Have each individual walk a random distance, avoiding encroaching within exposure_distance based on their social distancing modifier
+        for individual in self.individuals(): # Perform exposure check on all individuals within exposure_distance
+            close_individuals = self.individuals_within_social_distance(individual.x, individual.y)
+            individual.expose(close_individuals)
+        self.update_counts() # Update counts of individual states
+
+
     def list_individuals(self):
         # List the individuals in the grid and their positions
         list = ''
-        n = 1
         for i in range(0, self.size_x - 1):
             for j in range(0, self.size_y - 1):
                 if isinstance(self.grid[i,j], Individual):
                     ind = self.grid[i,j]
-                    list = list + '{}. {} (age {}) at [{},{}] ({}) \n'.format(n, ind.name, ind.age, i, j, ind.state)
-                    n += 1
+                    list = list + '{}. {} (age {}) at [{},{}] ({}) Mask: {} SD adherence: {} \n'.format(ind.grid_id, ind.name, ind.age, i, j, ind.state, ind.mask, ind.social_distancing_adherence)
         return list
 
     def individuals(self):
-        """
-        Get a list of all Individuals in the grid and their coordinates
-        """
+        #Get a list of all Individuals in the grid and their coordinates
         list = []
         for i in range(0, self.size_x - 1):
             for j in range(0, self.size_y - 1):
@@ -41,24 +72,83 @@ class Simulation():
                     list.append(self.grid[i,j])
         return list
 
-    def population(self):
-        n = 0 # start a counter
-        # count the number of Individuals in the grid
+    def query_grid_by_id(self, id):
+        # Given a grid id, return the corresponding individual and their position on the grid
         for i in range(0, self.size_x - 1):
             for j in range(0, self.size_y - 1):
                 if isinstance(self.grid[i,j], Individual):
-                    n += 1
-        return n
+                    individual = self.grid[i,j]
+                    if individual.grid_id == id:
+                        return individual
 
-    def add_individual_at_random_location(self, individual):
+    def population(self):
+        return len(self.individuals())
+
+    def update_positions(self, max_walk_distance=5):
+        individuals = self.individuals()
+        for individual in individuals:
+            old_x = individual.x
+            old_y = individual.y
+            (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance)
+            while len(self.individuals_within_social_distance(planned_x, planned_y)) > 0: # If there are people within social distance
+                encroach_result = np.random.random(1)
+                if encroach_result < individual.encroach_chance:
+                    break # move to new position anyway
+                else:
+                    (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance)# pick another random position to walk to
+            individual.x = planned_x # set new individual position
+            individual.y = planned_y
+
+            # update position on grid
+            self.grid[old_x, old_y] = Nobody() # clear old position
+            self.grid[individual.x, individual.y] = individual # set new grid position
+
+    def update_counts(self):
+        for individual in self.individuals():
+            state = individual.state
+            if state == COVIDState.EXPOSED:
+                self.susceptible -= 1
+                self.exposed += 1
+            elif state == COVIDState.INFECTED:
+                self.exposed -= 1
+                self.infected += 1
+            elif state == COVIDState.HOSPITALIZED:
+                self.infected -= 1
+                self.hospitalized += 1
+            elif state == COVIDState.CRITICAL:
+                self.hospitalized -= 1
+                self.critical += 1
+            elif state == COVIDState.DEAD:
+                self.critical -= 1
+                self.dead += 1
+
+    def individuals_within_social_distance(self, x, y):
+        # Get a list of individuals within social distance of given coords on grid
+        grid_population = self.individuals()
+        close_individuals = []
+        for individual in grid_population:
+            for i in range(self.size_x - 1):
+                for j in range(self.size_y - 1):
+                    point = self.grid[i,j]
+                    if isinstance(point, Individual):
+                        dx = np.abs(x - point.x)
+                        dy = np.abs(y - point.y)
+                        # diagonals coming soon
+                        if dx < self.exposure_distance or dy < self.exposure_distance:
+                            close_individuals.append(individual)
+        return close_individuals
+
+    def add_individual_at_random_location(self):
         coords = self.random_coordinates() # Generate the random location
         while self.slot_occupied(coords[0], coords[1]): # if the chosen slot is already occupied
             coords = self.random_coordinates()  # keep searching for an open slot
+        individual = Individual(self.next_available_id)
         individual.x = coords[0] # set individuals's coords
         individual.y = coords[1]
         if self.population() == 0:
             individual.state = COVIDState.EXPOSED # first person is always exposed
         self.grid[coords[0], coords[1]] = individual # add the individual to the slot
+        self.next_available_id += 1
 
     def random_coordinates(self):
         return (np.random.randint(0, self.size_x), np.random.randint(0, self.size_y))

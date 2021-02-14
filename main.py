@@ -6,11 +6,9 @@ def test_generator(n=100):
         fake_person = Person()
         print('Name: {} Age: {} DOB: {} COVID risk: {} State: {}'.format(fake_person.name, fake_person.age, fake_person.birthdate, fake_person.covid_risk_string(). fake_person.state))
 
-def test_grid(n_individuals=0):
+def run_simulation(pop=10, length=25):
     sim = Simulation()
-    if n_individuals > 0:
-        for i in range(0, n_individuals-1):
-            sim.add_individual_at_random_location(Individual())
-    sim.plot()
+    print('Starting simulation with population of {} and length {}...'.format(pop, length))
+    sim.run(pop=pop, length=length)
 
-test_grid(50)
+run_simulation()
