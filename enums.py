@@ -21,7 +21,7 @@ class Mask(Enum): # Mask types and transmission chance modifers
     SURGICAL = 2
     N95 = 3
 
-MASK_TRANSMISSION_MODIFIERS = {Mask.NONE: 0.00, Mask.CLOTH: 0.40, Mask.SURGICAL: 0.70, Mask.N95: 0.90}
+MASK_TRANSMISSION_MODIFIERS = {Mask.NONE: 1.00, Mask.CLOTH: 0.60, Mask.SURGICAL: 0.25, Mask.N95: 0.07}
 
 DIRECTION_BY_ID = {0: Direction.NORTH,
                    1: Direction.EAST,
