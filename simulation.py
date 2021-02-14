@@ -183,4 +183,4 @@ class Simulation():
         ax.yaxis.set_label('y')
         ax.set_title('{} individuals at random positions (t = {})'.format(n, self.t))
         pp.show()
-        pp.savefig(fname, dpi=300)
+        fig.savefig(fname, dpi=300)
