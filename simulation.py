@@ -13,7 +13,7 @@ class Simulation():
         self.grid = np.ndarray((size_x, size_y), dtype=Person)
         self.grid.fill(Nobody())
         self.next_available_id = 1
-        self.exposure_distance = 6 # distance individuals must be within each other to get exposed. Individuals will try to stay greater than this value apart from each other on the grid, based on their social distancing adherece
+        self.exposure_distance = 3 # distance individuals must be within each other to get exposed. Individuals will try to stay greater than this value apart from each other on the grid, based on their social distancing adherece
 
         # Number of people in each state
         self.susceptible = 0
@@ -87,11 +87,9 @@ class Simulation():
     def population(self):
         return len(self.individuals())
 
-    def update_positions(self, max_walk_distance=5):
+    def update_positions(self, max_walk_distance=1):
         individuals = self.individuals()
         for individual in individuals:
-            old_x = individual.x
-            old_y = individual.y
             max_x = self.size_x
             max_y = self.size_y
             (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y)
@@ -101,28 +99,40 @@ class Simulation():
                     pass # violate social distancing anyway
                 else:
                     (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y) # individual decided to keep social distance this time, pick a new position
+
+            self.grid[individual.x, individual.y] = Nobody() # clear old position
             # update position on grid
-            self.grid[old_x, old_y] = Nobody() # clear old position
-            self.grid[individual.x, individual.y] = individual # set new grid position
+            individual.x = planned_x
+            individual.y = planned_y
+            self.grid[planned_x, planned_y] = individual # set new grid position
 
     def update_counts(self):
+        self.reset_counts()
         for individual in self.individuals():
             state = individual.state
-            if state == COVIDState.EXPOSED:
-                self.susceptible -= 1
+            if state == COVIDState.SUSCEPTIBLE:
+                self.susceptible += 1
+            elif state == COVIDState.EXPOSED:
                 self.exposed += 1
             elif state == COVIDState.INFECTED:
-                self.exposed -= 1
                 self.infected += 1
             elif state == COVIDState.HOSPITALIZED:
-                self.infected -= 1
                 self.hospitalized += 1
             elif state == COVIDState.CRITICAL:
-                self.hospitalized -= 1
                 self.critical += 1
             elif state == COVIDState.DEAD:
-                self.critical -= 1
                 self.dead += 1
+            elif state == COVIDState.RECOVERED:
+                self.recovered += 1
+
+    def reset_counts(self):
+        self.susceptible = 0
+        self.exposed = 0
+        self.infected = 0
+        self.hospitalized = 0
+        self.critical = 0
+        self.dead = 0
+        self.recovered = 0
 
     def individuals_within_social_distance(self, x, y):
         # Get a list of individuals within social distance of given coords on grid
@@ -132,11 +142,11 @@ class Simulation():
             for i in range(self.size_x - 1):
                 for j in range(self.size_y - 1):
                     point = self.grid[i,j]
-                    if isinstance(point, Individual):
+                    if isinstance(point, Individual) and point is not individual:
                         dx = np.abs(x - point.x)
                         dy = np.abs(y - point.y)
-                        # diagonals coming soon
-                        if dx < self.exposure_distance or dy < self.exposure_distance:
+                        dist = np.sqrt(dx*dx + dy*dy)
+                        if dist <= self.exposure_distance and dist != 0.0:
                             close_individuals.append(individual)
         return close_individuals
 
@@ -183,4 +193,4 @@ class Simulation():
         ax.yaxis.set_label('y')
         ax.set_title('{} individuals at random positions (t = {})'.format(n, self.t))
         pp.show()
-        fig.savefig(fname, dpi=300)
+        fig.savefig(fname, dpi=200)

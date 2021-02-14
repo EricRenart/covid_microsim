@@ -72,16 +72,16 @@ class Individual(Person):
         # Pick a random position this individual plans to walk to
         dx = np.random.randint(0, max_distancex)
         dy = np.random.randint(0, max_distancey)
-        # make sure the new position is within bounds
-        if 0 > dx > max_x:
-            dx = 0
-        if 0 > dy > max_y:
-            dy = 0
         direction = enums.DIRECTION_BY_ID.get(np.random.randint(0,3))
-        return self.planned_position(direction, distancex=dx, distancey=dy)
+        position = self.planned_position(direction, distancex=dx, distancey=dy)
+        # make sure the new position is within bounds
+        while (position[0] < 0) or (position[1] < 0) or (position[0] > max_x) or (position[1] > max_y): # If out of bounds keep generating new positions until one is within bounds
+            position = self.planned_position(direction, distancex=dx, distancey=dy)
+        return position
 
     def expose(self, persons, base_chance=0.20):
         # Expose a list of persons to COVID with the given chance of exposure (modified by mask)
+        logging.debug('Checking exposure from {} to {}'.format(self.name, [person.name for person in persons]))
         for person in persons:
             total_exp_chance = enums.MASK_TRANSMISSION_MODIFIERS.get(self.mask) * base_chance
             rand = np.random.random(1)
