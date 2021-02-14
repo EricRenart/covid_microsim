@@ -70,8 +70,8 @@ class Individual(Person):
 
     def planned_position_random(self, max_distancex=5, max_distancey=5, max_x=100, max_y=100):
         # Pick a random position this individual plans to walk to
-        dx = np.random.randint(0, max_distancex)
-        dy = np.random.randint(0, max_distancey)
+        dx = np.random.randint(low=0, high=max_distancex+1)
+        dy = np.random.randint(low=0, high=max_distancey+1)
         direction = enums.DIRECTION_BY_ID.get(np.random.randint(0,3))
         position = self.planned_position(direction, distancex=dx, distancey=dy)
         # make sure the new position is within bounds

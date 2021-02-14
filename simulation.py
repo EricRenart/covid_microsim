@@ -64,7 +64,7 @@ class Simulation():
             for j in range(0, self.size_y - 1):
                 if isinstance(self.grid[i,j], Individual):
                     ind = self.grid[i,j]
-                    list = list + '{}. {} (age {}) at [{},{}] ({}) Mask: {} SD adherence: {} \n'.format(ind.grid_id, ind.name, ind.age, i, j, ind.state, ind.mask, ind.social_distancing_adherence)
+                    list = list + '| {}. {} (age {}) | [{},{}] | {} | Mask: {} | SD adherence: {} | \n'.format(ind.grid_id, ind.name, ind.age, i, j, ind.state, ind.mask, ind.social_distancing_adherence)
         return list
 
     def individuals(self):
@@ -88,7 +88,7 @@ class Simulation():
     def population(self):
         return len(self.individuals())
 
-    def update_positions(self, max_walk_distance=1):
+    def update_positions(self, max_walk_distance=3):
         individuals = self.individuals()
         for individual in individuals:
             max_x = self.size_x
@@ -97,7 +97,7 @@ class Simulation():
             planned_encroachment = len(self.individuals_within_social_distance(planned_x, planned_y)) > 0 # Are there individuals within social distance?
             if planned_encroachment:
                 if np.random.rand(1) < individual.encroach_chance: # If the individual decides to violate social distancing
-                    pass # violate social distancing anyway
+                    logging.info('{} decided to violate social distancing!'.format(individual.name)) # violate social distancing anyway
                 else:
                     (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y) # individual decided to keep social distance this time, pick a new position
 
@@ -105,7 +105,7 @@ class Simulation():
             # update position on grid
             individual.x = planned_x
             individual.y = planned_y
-            self.grid[planned_x, planned_y] = individual # set new grid position
+            self.grid[planned_x-1, planned_y-1] = individual # set new grid position
 
     def update_counts(self):
         self.reset_counts()
@@ -140,15 +140,15 @@ class Simulation():
         grid_population = self.individuals()
         close_individuals = []
         for individual in grid_population:
-            for i in range(self.size_x - 1):
-                for j in range(self.size_y - 1):
-                    point = self.grid[i,j]
-                    if isinstance(point, Individual) and point is not individual:
-                        dx = np.abs(x - point.x)
-                        dy = np.abs(y - point.y)
-                        dist = np.sqrt(dx*dx + dy*dy)
-                        if dist <= self.exposure_distance and dist != 0.0:
-                            close_individuals.append(individual)
+            with np.nditer(self.grid, flags=['multi_index', 'buffered', 'refs_ok']) as iterator:
+                point = self.grid[iterator.multi_index[0],iterator.multi_index[1]]
+                if isinstance(point, Individual) and point is not individual:
+                    dx = np.abs(x - point.x)
+                    dy = np.abs(y - point.y)
+                    dist = np.sqrt(dx*dx + dy*dy)
+                    if dist <= self.exposure_distance and dist != 0.0:
+                        close_individuals.append(individual)
+                iterator.iternext()
         return close_individuals
 
     def add_individual_at_random_location(self):
