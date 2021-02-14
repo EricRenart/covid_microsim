@@ -35,6 +35,7 @@ class Simulation():
         print('Running COVID-19 microsimulation with population of {}...'.format(self.population()))
         print('Initial Conditions:\n')
         print(self.list_individuals())
+        self.plot('initial_results.png')
         print('Starting simulation.')
         for i in range(0, length-1):
             self.step()
@@ -42,7 +43,8 @@ class Simulation():
         print('SIMULATION COMPLETE!')
         print('Final Results by individual:')
         self.list_individuals()
-        self.plot()
+        self.plot('final_results.png')
+        return self.list_individuals()
 
     def step(self):
         self.t += 1 # Advance the simulation by one time unit
@@ -89,16 +91,15 @@ class Simulation():
         for individual in individuals:
             old_x = individual.x
             old_y = individual.y
-            (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance)
-            while len(self.individuals_within_social_distance(planned_x, planned_y)) > 0: # If there are people within social distance
-                encroach_result = np.random.random(1)
-                if encroach_result < individual.encroach_chance:
-                    break # move to new position anyway
+            max_x = self.size_x
+            max_y = self.size_y
+            (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y)
+            planned_encroachment = len(self.individuals_within_social_distance(planned_x, planned_y)) > 0 # Are there individuals within social distance?
+            if planned_encroachment:
+                if np.random.rand(1) < individual.encroach_chance: # If the individual decides to violate social distancing
+                    pass # violate social distancing anyway
                 else:
-                    (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance)# pick another random position to walk to
-            individual.x = planned_x # set new individual position
-            individual.y = planned_y
-
+                    (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y) # individual decided to keep social distance this time, pick a new position
             # update position on grid
             self.grid[old_x, old_y] = Nobody() # clear old position
             self.grid[individual.x, individual.y] = individual # set new grid position
@@ -165,7 +166,7 @@ class Simulation():
     Plotting methods
     '''
 
-    def plot(self):
+    def plot(self, fname):
         fig, ax = pp.subplots(figsize=(16,16))
         individuals = self.individuals()
         n = self.population()
@@ -181,3 +182,4 @@ class Simulation():
         ax.yaxis.set_label('y')
         ax.set_title('{} individuals at random positions (t = {})'.format(n, self.t))
         pp.show()
+        pp.savefig(fname, dpi=300)

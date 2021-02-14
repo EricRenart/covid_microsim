@@ -69,10 +69,15 @@ class Individual(Person):
         new_y = self.y + (enums.MOVEMENT_DELTAS.get(direction)[1] * distancey)
         return (new_x, new_y)
 
-    def planned_position_random(self, max_distancex=5, max_distancey=5):
+    def planned_position_random(self, max_distancex=5, max_distancey=5, max_x=100, max_y=100):
         # Pick a random position this individual plans to walk to
         dx = np.random.randint(0, max_distancex)
         dy = np.random.randint(0, max_distancey)
+        # make sure the new position is within bounds
+        if 0 > dx > max_x:
+            dx = 0
+        if 0 > dy > max_y:
+            dy = 0
         direction = enums.DIRECTION_BY_ID.get(np.random.randint(0,3))
         return self.planned_position(direction, distancex=dx, distancey=dy)
 
