@@ -51,10 +51,11 @@ class Simulation():
         self.t += 1 # Advance the simulation by one time unit
         self.update_positions() # Have each individual walk a random distance, avoiding encroaching within exposure_distance based on their social distancing modifier
         for individual in self.individuals(): # Perform exposure check on all individuals within exposure_distance
-            close_individuals = self.individuals_within_social_distance(individual.x, individual.y)
-            individual.expose(close_individuals)
+            if individual.state == COVIDState.INFECTED:
+                close_individuals = self.individuals_within_social_distance(individual.x, individual.y)
+                individual.expose(close_individuals, self.t)
+            individual.check_infection_state(self.t, incubation_pd=4) # Check whether they are infected based on the incubation period
         self.update_counts() # Update counts of individual states
-
 
     def list_individuals(self):
         # List the individuals in the grid and their positions

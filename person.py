@@ -17,7 +17,7 @@ class Person:
             self.birthdate = fake.date_of_birth()
             self.age = int((dt.date.today() - self.birthdate).days / 365.25)
             self.state = enums.COVIDState.SUSCEPTIBLE
-            self.days_with_covid = 0
+            self.day_exposed = 0
 
     def covid_risk(self):
         if self.age < 18.0:
@@ -79,7 +79,7 @@ class Individual(Person):
             position = self.planned_position(direction, distancex=dx, distancey=dy)
         return position
 
-    def expose(self, persons, base_chance=0.20):
+    def expose(self, persons, t, base_chance=0.20):
         # Expose a list of persons to COVID with the given chance of exposure (modified by mask)
         logging.debug('Checking exposure from {} to {}'.format(self.name, [person.name for person in persons]))
         for person in persons:
@@ -88,4 +88,11 @@ class Individual(Person):
             if rand < total_exp_chance:
                 if person.state == enums.COVIDState.SUSCEPTIBLE and person is not self:
                     person.state = enums.COVIDState.EXPOSED
+                    person.day_exposed = t
                     logging.info('{} has infected {} with COVID-19!'.format(self.name, person.name))
+
+    def check_infection_state(self, t, incubation_pd=4):
+        day_infected = self.day_exposed + incubation_pd
+        if t >= day_infected and self.state == enums.COVIDState.EXPOSED:
+            self.state = enums.COVIDState.INFECTED
+            logging.info('{} has become infected and can now transmit COVID'.format(self.name))
