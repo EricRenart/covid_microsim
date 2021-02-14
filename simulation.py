@@ -33,17 +33,17 @@ class Simulation():
     def run(self, pop=50, length=100):
         for i in range(0, pop):
             self.add_individual_at_random_location() # Add initial individuals to grid
-        logging.warning('Running COVID-19 microsimulation with population of {}...'.format(self.population()))
-        logging.warning('Initial Conditions:\n')
-        logging.warning(self.list_individuals())
+        logging.info('Running COVID-19 microsimulation with population of {}...'.format(self.population()))
+        logging.info('Initial Conditions:\n')
+        logging.info(self.list_individuals())
         self.plot('initial_results.png')
-        logging.warning('Starting simulation.')
+        logging.info('Starting simulation.')
         for i in range(0, length-1):
             self.step()
-            logging.warning('t = {}, susc = {}, exp = {}, inf = {}, hosp = {}, crit = {}, dead = {}, recov={}'.format(self.t, self.susceptible, self.exposed, self.infected, self.hospitalized, self.critical, self.dead, self.recovered))
-        logging.warning('SIMULATION COMPLETE!')
-        logging.warning('Final Results by individual:')
-        logging.warning(self.list_individuals())
+            logging.info('t = {}, susc = {}, exp = {}, inf = {}, hosp = {}, crit = {}, dead = {}, recov={}'.format(self.t, self.susceptible, self.exposed, self.infected, self.hospitalized, self.critical, self.dead, self.recovered))
+        logging.info('SIMULATION COMPLETE!')
+        logging.info('Final Results by individual:')
+        logging.info(self.list_individuals())
         self.plot('final_results.png')
         return self.list_individuals()
 

@@ -86,6 +86,6 @@ class Individual(Person):
             total_exp_chance = enums.MASK_TRANSMISSION_MODIFIERS.get(self.mask) * base_chance
             rand = np.random.random(1)
             if rand < total_exp_chance:
-                if person.state == enums.COVIDState.SUSCEPTIBLE:
+                if person.state == enums.COVIDState.SUSCEPTIBLE and person is not self:
                     person.state = enums.COVIDState.EXPOSED
-                    logging.warning('{} has infected {} with COVID-19!'.format(self.name, person.name))
+                    logging.info('{} has infected {} with COVID-19!'.format(self.name, person.name))
