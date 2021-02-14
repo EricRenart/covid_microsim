@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as pp
 from person import Nobody, Individual, Person
 from enums import COVIDState, STATE_COLORS
+import logging
 
 class Simulation():
 
@@ -32,17 +33,17 @@ class Simulation():
     def run(self, pop=50, length=100):
         for i in range(0, pop):
             self.add_individual_at_random_location() # Add initial individuals to grid
-        print('Running COVID-19 microsimulation with population of {}...'.format(self.population()))
-        print('Initial Conditions:\n')
-        print(self.list_individuals())
+        logging.warning('Running COVID-19 microsimulation with population of {}...'.format(self.population()))
+        logging.warning('Initial Conditions:\n')
+        logging.warning(self.list_individuals())
         self.plot('initial_results.png')
-        print('Starting simulation.')
+        logging.warning('Starting simulation.')
         for i in range(0, length-1):
             self.step()
-            print('t = {}, susc = {}, exp = {}, inf = {}, hosp = {}, crit = {}, dead = {}, recov={}'.format(self.t, self.susceptible, self.exposed, self.infected, self.hospitalized, self.critical, self.dead, self.recovered))
-        print('SIMULATION COMPLETE!')
-        print('Final Results by individual:')
-        self.list_individuals()
+            logging.warning('t = {}, susc = {}, exp = {}, inf = {}, hosp = {}, crit = {}, dead = {}, recov={}'.format(self.t, self.susceptible, self.exposed, self.infected, self.hospitalized, self.critical, self.dead, self.recovered))
+        logging.warning('SIMULATION COMPLETE!')
+        logging.warning('Final Results by individual:')
+        logging.warning(self.list_individuals())
         self.plot('final_results.png')
         return self.list_individuals()
 

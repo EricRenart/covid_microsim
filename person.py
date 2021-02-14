@@ -1,8 +1,7 @@
-import faker
+import faker, enums, logging
 import numpy as np
 import datetime as dt
 import dateutils as du
-import enums
 
 class Person:
     def __init__(self):
@@ -89,4 +88,4 @@ class Individual(Person):
             if rand < total_exp_chance:
                 if person.state == enums.COVIDState.SUSCEPTIBLE:
                     person.state = enums.COVIDState.EXPOSED
-                    print('{} has infected {} with COVID-19!'.format(self.name, person.name))
+                    logging.warning('{} has infected {} with COVID-19!'.format(self.name, person.name))
