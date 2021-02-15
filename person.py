@@ -75,8 +75,8 @@ class Individual(Person):
         direction = enums.DIRECTION_BY_ID.get(np.random.randint(0,3))
         position = self.planned_position(direction, distancex=dx, distancey=dy)
         # make sure the new position is within bounds
-        while (position[0] < 0) or (position[1] < 0) or (position[0] > max_x) or (position[1] > max_y): # If out of bounds keep generating new positions until one is within bounds
-            position = self.planned_position(direction, distancex=dx, distancey=dy)
+        while (position[0] < 0) or (position[1] < 0) or (position[0] >= max_x) or (position[1] >= max_y): # If out of bounds keep generating new positions until one is within bounds
+            position = self.planned_position_random(max_distancex, max_distancey, max_x, max_y)
         return position
 
     def expose(self, persons, t, base_chance=0.20):

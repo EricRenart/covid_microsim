@@ -101,7 +101,7 @@ class Simulation():
                 else:
                     (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y) # individual decided to keep social distance this time, pick a new position
 
-            self.grid[individual.x, individual.y] = Nobody() # clear old position
+            self.grid[individual.x-1, individual.y-1] = Nobody() # clear old position
             # update position on grid
             individual.x = planned_x
             individual.y = planned_y
@@ -145,7 +145,7 @@ class Simulation():
                 if isinstance(point, Individual) and point is not individual:
                     dx = np.abs(x - point.x)
                     dy = np.abs(y - point.y)
-                    dist = np.sqrt(dx*dx + dy*dy)
+                    dist = np.hypot(dx, dy)
                     if dist <= self.exposure_distance and dist != 0.0:
                         close_individuals.append(individual)
                 iterator.iternext()
@@ -179,7 +179,7 @@ class Simulation():
     '''
 
     def plot(self, fname):
-        fig, ax = pp.subplots(figsize=(16,16))
+        fig, ax = pp.subplots(figsize=(12,12))
         individuals = self.individuals()
         n = self.population()
         cx = []
@@ -189,9 +189,8 @@ class Simulation():
             cx.append(ind.x)
             cy.append(ind.y)
             cstate_color.append(STATE_COLORS.get(ind.state))
-        ax.scatter(cx, cy, c=cstate_color, s=3, alpha=1.0)
+        ax.scatter(cx, cy, c=cstate_color, s=5, alpha=1.0)
         ax.xaxis.set_label('x')
         ax.yaxis.set_label('y')
         ax.set_title('{} individuals at random positions (t = {})'.format(n, self.t))
-        pp.show()
-        fig.savefig(fname, dpi=200)
+        fig.savefig(fname, dpi=100)
