@@ -1,7 +1,6 @@
 import faker, enums, logging
 import numpy as np
 import datetime as dt
-import dateutils as du
 
 class Person:
     def __init__(self):

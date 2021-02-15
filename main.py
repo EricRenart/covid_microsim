@@ -1,5 +1,6 @@
 from person import Person, Individual
 import numpy as np
+import seaborn as sns
 from simulation import Simulation
 from matplotlib import pyplot as pp
 from matplotlib.animation import FuncAnimation, FFMpegWriter
@@ -15,6 +16,8 @@ def animation_step(i): # Animation update function
     return scatter,
 
 # MAIN PROGRAM
+sns.set()
+
 pop = 40
 length = 100
 
