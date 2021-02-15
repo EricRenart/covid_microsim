@@ -139,18 +139,34 @@ class Simulation():
         self.dead = 0
         self.recovered = 0
 
-    def individuals_within_social_distance(self, x, y):
-        # Get a list of individuals within social distance of the given point on the grid
+    def individuals_within_social_distance(self, x, y): # Get a list of individuals within social distance of the given point on the grid
         close_individuals = []
-        for i in range(0, self.size_x-1):
-            for j in range(0, self.size_y-1):
-                point = self.grid[i,j]
-                if isinstance(point, Individual):
-                    dx = np.abs(x - i)
-                    dy = np.abs(y - j)
-                    dist = np.hypot(dx, dy)
-                    if dist <= self.exposure_distance and dist != 0.0:
-                        close_individuals.append(self.grid[i,j])
+
+        # Slice a subsection of the array corresponding to [exposure_distance] radius around the given coords
+        x_start = x - self.exposure_distance
+        x_stop = x + self.exposure_distance
+        y_start = y - self.exposure_distance
+        y_stop = y + self.exposure_distance
+
+        # Clamp to bounds if neccessary
+        if x_start < 0:
+            x_start = 0
+        if y_start < 0:
+            y_start = 0
+        if x_start > self.size_x:
+            x_start = self.size_x
+        if y_start > self.size_y:
+            y_start = self.size_y
+
+        # slice out the search area around the given points
+        search_area = self.grid[x_start:x_stop,y_start:y_stop]
+
+        # find individuals in search area
+        for i in range(0,self.exposure_distance-1):
+            for j in range(0,self.exposure_distance-1):
+                element = search_area[i,j]
+                if isinstance(element, Individual):
+                    close_individuals.append(element)
         return close_individuals
 
     def add_individual_at_random_location(self):
