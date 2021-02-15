@@ -2,21 +2,21 @@ from person import Person, Individual
 import numpy as np
 from simulation import Simulation
 from matplotlib import pyplot as pp
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FuncAnimation, FFMpegWriter
 import os, logging, sys, cProfile
 
 def animation_step(i): # Animation update function
     x = frames[i][0]
     y = frames[i][1]
-    xy = np.array((x,y), dtype='int')
+    xy = np.c_[x,y]
     scatter.set_offsets(xy)
-    scatter.set_array(frames[i][2])
+    scatter.set_color(frames[i][2])
     ax.set_title('COVID simulation, {} individuals, t={}'.format(sim.population(), sim.t))
     return scatter,
 
 # MAIN PROGRAM
-pop = 25
-length = 20
+pop = 40
+length = 100
 
 stream = logging.StreamHandler(sys.stdout)
 file = logging.FileHandler(filename='output.txt', mode='w')
@@ -36,6 +36,9 @@ frames = sim.run(pop=pop, length=length)
 scatter, = ax.scatter(frames[0][0], frames[0][1], c=frames[0][2], s=5, lw=1),
 
 # Set up animation
-animation = FuncAnimation(fig, animation_step, interval=400, blit=True)
+animation = FuncAnimation(fig, animation_step, interval=100, blit=True)
 pp.show()
-animation.save('simulation.gif', writer='imagemagick')
+
+# Save a video
+writer = FFMpegWriter(fps=30, bitrate=1800)
+animation.save('simulation.mp4', writer=writer)

@@ -110,7 +110,6 @@ class Simulation():
             individual.x = planned_x # update individuals position
             individual.y = planned_y
             self.grid[planned_x, planned_y] = individual # set new grid position
-            logging.info(self.list_individuals())
 
     def update_counts(self):
         self.reset_counts()
@@ -191,5 +190,4 @@ class Simulation():
             x_positions.append(ind.x)
             y_positions.append(ind.y)
             state_colors.append(STATE_COLORS.get(ind.state))
-        print('x={} y={} c={}'.format(len(x_positions), len(y_positions), len(state_colors)))
         return (x_positions, y_positions, state_colors)
