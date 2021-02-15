@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as pp
+from matplotlib.animation import FuncAnimation
 from person import Nobody, Individual, Person
 from enums import COVIDState, STATE_COLORS
 import logging
@@ -7,6 +8,7 @@ import logging
 class Simulation():
 
     def __init__(self, size_x=100, size_y=100):
+        self.length = 0
         self.size_x = size_x
         self.size_y = size_y
         self.t = 0
@@ -31,21 +33,23 @@ class Simulation():
         return '{}x{} grid, {} total slots, \n{} individuals present: \n{}'.format(self.size_x, self.size_y, size, population, ind_list)
 
     def run(self, pop=50, length=100):
+        self.length = length
         for i in range(0, pop):
             self.add_individual_at_random_location() # Add initial individuals to grid
         logging.info('Running COVID-19 microsimulation with population of {}...'.format(self.population()))
         logging.info('Initial Conditions:\n')
         logging.info(self.list_individuals())
-        self.plot('initial_results.png')
         logging.info('Starting simulation.')
+        step_plots = [] # Set up list of plots to animate
         for i in range(0, length-1):
             self.step()
+            current_plot = self.get_plot_data()
+            step_plots.append(current_plot) # Append the current plot to the list of plots
             logging.info('t = {}, susc = {}, exp = {}, inf = {}, hosp = {}, crit = {}, dead = {}, recov={}'.format(self.t, self.susceptible, self.exposed, self.infected, self.hospitalized, self.critical, self.dead, self.recovered))
         logging.info('SIMULATION COMPLETE!')
         logging.info('Final Results by individual:')
         logging.info(self.list_individuals())
-        self.plot('final_results.png')
-        return self.list_individuals()
+        return step_plots # Return list of frames to animate through
 
     def step(self):
         self.t += 1 # Advance the simulation by one time unit
@@ -93,6 +97,7 @@ class Simulation():
         for individual in individuals:
             max_x = self.size_x
             max_y = self.size_y
+            (current_x, current_y) = (individual.x, individual.y)
             (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y)
             planned_encroachment = len(self.individuals_within_social_distance(planned_x, planned_y)) > 0 # Are there individuals within social distance?
             if planned_encroachment:
@@ -101,11 +106,11 @@ class Simulation():
                 else:
                     (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y) # individual decided to keep social distance this time, pick a new position
 
-            self.grid[individual.x-1, individual.y-1] = Nobody() # clear old position
-            # update position on grid
-            individual.x = planned_x
+            self.grid[current_x, current_y] = Nobody() # clear old position
+            individual.x = planned_x # update individuals position
             individual.y = planned_y
-            self.grid[planned_x-1, planned_y-1] = individual # set new grid position
+            self.grid[planned_x, planned_y] = individual # set new grid position
+            logging.info(self.list_individuals())
 
     def update_counts(self):
         self.reset_counts()
@@ -178,19 +183,13 @@ class Simulation():
     Plotting methods
     '''
 
-    def plot(self, fname):
-        fig, ax = pp.subplots(figsize=(12,12))
-        individuals = self.individuals()
-        n = self.population()
-        cx = []
-        cy = []
-        cstate_color = []
-        for ind in individuals:
-            cx.append(ind.x)
-            cy.append(ind.y)
-            cstate_color.append(STATE_COLORS.get(ind.state))
-        ax.scatter(cx, cy, c=cstate_color, s=5, alpha=1.0)
-        ax.xaxis.set_label('x')
-        ax.yaxis.set_label('y')
-        ax.set_title('{} individuals at random positions (t = {})'.format(n, self.t))
-        fig.savefig(fname, dpi=100)
+    def get_plot_data(self):
+        x_positions = []
+        y_positions = []
+        state_colors = []
+        for ind in self.individuals():
+            x_positions.append(ind.x)
+            y_positions.append(ind.y)
+            state_colors.append(STATE_COLORS.get(ind.state))
+        print('x={} y={} c={}'.format(len(x_positions), len(y_positions), len(state_colors)))
+        return (x_positions, y_positions, state_colors)
