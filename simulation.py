@@ -45,8 +45,7 @@ class Simulation():
             self.step()
             current_plot = self.get_plot_data()
             step_plots.append(current_plot) # Append the current plot to the list of plots
-            logging.info('t = {}, susc = {}, exp = {}, inf = {}, hosp = {}, crit = {}, dead = {}, recov={}'.format(self.t, self.susceptible, self.exposed, self.infected, self.hospitalized, self.critical, self.dead, self.recovered))
-        logging.info('SIMULATION COMPLETE!')
+        logging.info('Simulation Complete!')
         logging.info('Final Results by individual:')
         logging.info(self.list_individuals())
         return step_plots # Return list of frames to animate through
@@ -102,10 +101,11 @@ class Simulation():
             planned_encroachment = len(self.individuals_within_social_distance(planned_x, planned_y)) > 0 # Are there individuals within social distance?
             if planned_encroachment:
                 if np.random.rand(1) < individual.encroach_chance: # If the individual decides to violate social distancing
-                    logging.info('{} decided to violate social distancing!'.format(individual.name)) # violate social distancing anyway
+                    logging.info('{} decided to violate social distancing'.format(individual.name)) # violate social distancing anyway
                 else:
                     (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y) # individual decided to keep social distance this time, pick a new position
 
+            # Update the actual grid
             self.grid[current_x, current_y] = Nobody() # clear old position
             individual.x = planned_x # update individuals position
             individual.y = planned_y
@@ -140,19 +140,17 @@ class Simulation():
         self.recovered = 0
 
     def individuals_within_social_distance(self, x, y):
-        # Get a list of individuals within social distance of given coords on grid
-        grid_population = self.individuals()
+        # Get a list of individuals within social distance of the given point on the grid
         close_individuals = []
-        for individual in grid_population:
-            with np.nditer(self.grid, flags=['multi_index', 'buffered', 'refs_ok']) as iterator:
-                point = self.grid[iterator.multi_index[0],iterator.multi_index[1]]
-                if isinstance(point, Individual) and point is not individual:
-                    dx = np.abs(x - point.x)
-                    dy = np.abs(y - point.y)
+        for i in range(0, self.size_x-1):
+            for j in range(0, self.size_y-1):
+                point = self.grid[i,j]
+                if isinstance(point, Individual):
+                    dx = np.abs(x - i)
+                    dy = np.abs(y - j)
                     dist = np.hypot(dx, dy)
                     if dist <= self.exposure_distance and dist != 0.0:
-                        close_individuals.append(individual)
-                iterator.iternext()
+                        close_individuals.append(self.grid[i,j])
         return close_individuals
 
     def add_individual_at_random_location(self):

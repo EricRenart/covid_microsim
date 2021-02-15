@@ -65,7 +65,7 @@ class Individual(Person):
         assert isinstance(direction, enums.Direction)
         new_x = self.x + (enums.MOVEMENT_DELTAS.get(direction)[0] * distancex)
         new_y = self.y + (enums.MOVEMENT_DELTAS.get(direction)[1] * distancey)
-        return (new_x, new_y)
+        return (new_x, new_y) # Re-indexing to grid coordinates
 
     def planned_position_random(self, max_distancex=5, max_distancey=5, max_x=100, max_y=100):
         # Pick a random position this individual plans to walk to

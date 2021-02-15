@@ -4,7 +4,7 @@ import seaborn as sns
 from simulation import Simulation
 from matplotlib import pyplot as pp
 from matplotlib.animation import FuncAnimation, FFMpegWriter
-import os, logging, sys, cProfile
+import logging, sys
 
 def animation_step(i): # Animation update function
     x = frames[i][0]
