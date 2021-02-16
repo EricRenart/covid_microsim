@@ -18,7 +18,7 @@ def animation_step(i): # Animation update function
 # MAIN PROGRAM
 sns.set()
 
-pop = 40
+pop = 100
 length = 100
 
 stream = logging.StreamHandler(sys.stdout)
@@ -43,5 +43,5 @@ animation = FuncAnimation(fig, animation_step, interval=100, blit=True)
 pp.show()
 
 # Save a video
-writer = FFMpegWriter(fps=30, bitrate=1800)
+writer = FFMpegWriter(fps=20, bitrate=1800)
 animation.save('simulation.mp4', writer=writer)

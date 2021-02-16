@@ -43,6 +43,7 @@ class Simulation():
         step_plots = [] # Set up list of plots to animate
         for i in range(0, length-1):
             self.step()
+            logging.info('t={} susc={} exp={} inf={}'.format(self.t, self.susceptible, self.exposed, self.infected))
             current_plot = self.get_plot_data()
             step_plots.append(current_plot) # Append the current plot to the list of plots
         logging.info('Simulation Complete!')
@@ -101,15 +102,15 @@ class Simulation():
             planned_encroachment = len(self.individuals_within_social_distance(planned_x, planned_y)) > 0 # Are there individuals within social distance?
             if planned_encroachment:
                 if np.random.rand(1) < individual.encroach_chance: # If the individual decides to violate social distancing
-                    logging.info('{} decided to violate social distancing'.format(individual.name)) # violate social distancing anyway
+                    logging.debug('{} decided to violate social distancing'.format(individual.name)) # violate social distancing anyway
                 else:
                     (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y) # individual decided to keep social distance this time, pick a new position
 
             # Update the actual grid
             self.grid[current_x, current_y] = Nobody() # clear old position
+            self.grid[planned_x, planned_y] = individual # set new grid position
             individual.x = planned_x # update individuals position
             individual.y = planned_y
-            self.grid[planned_x, planned_y] = individual # set new grid position
 
     def update_counts(self):
         self.reset_counts()

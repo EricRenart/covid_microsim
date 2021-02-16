@@ -10,7 +10,7 @@ class Person:
             self.age = None
             self.state = None
         else:
-            nationalities = ['en_US']
+            nationalities = ['en_US', 'en_IE']
             fake = faker.Faker(nationalities)
             self.name = fake.name()
             self.birthdate = fake.date_of_birth()
@@ -69,22 +69,30 @@ class Individual(Person):
 
     def planned_position_random(self, max_distancex=5, max_distancey=5, max_x=100, max_y=100):
         # Pick a random position this individual plans to walk to
-        dx = np.random.randint(low=0, high=max_distancex+1)
-        dy = np.random.randint(low=0, high=max_distancey+1)
+        dx = np.random.randint(low=0, high=max_distancex)
+        dy = np.random.randint(low=0, high=max_distancey)
         direction = enums.DIRECTION_BY_ID.get(np.random.randint(0,3))
-        position = self.planned_position(direction, distancex=dx, distancey=dy)
-        # make sure the new position is within bounds
-        while (position[0] < 0) or (position[1] < 0) or (position[0] >= max_x) or (position[1] >= max_y): # If out of bounds keep generating new positions until one is within bounds
-            position = self.planned_position_random(max_distancex, max_distancey, max_x, max_y)
-        return position
+        (new_x, new_y) = self.planned_position(direction, distancex=dx, distancey=dy)
+        # "wrap around" the new position if it is out of bounds
+        if new_x < 0:
+            new_x = max_x - new_x
+        if new_x >= max_x:
+            new_x = new_x - max_x
+        if new_y < 0:
+            new_y = max_y - new_y
+        if new_y >= max_y:
+            new_y = new_y - max_y
+        return (new_x, new_y) # convert to grid coordinates
 
-    def expose(self, persons, t, base_chance=0.20):
+    def expose(self, persons, t, base_chance=0.35):
         # Expose a list of persons to COVID with the given chance of exposure (modified by mask)
-        logging.debug('Checking exposure from {} to {}'.format(self.name, [person.name for person in persons]))
         for person in persons:
+            logging.debug('Checking exposure from {} to {}...'.format(self.name, person.name))
             total_exp_chance = enums.MASK_TRANSMISSION_MODIFIERS.get(self.mask) * base_chance
-            rand = np.random.random(1)
-            if rand < total_exp_chance:
+            logging.debug('final exposure chance: {}'.format(total_exp_chance))
+            result = np.random.random(1)
+            logging.debug('exposure check result: {}'.format(result))
+            if result < total_exp_chance:
                 if person.state == enums.COVIDState.SUSCEPTIBLE and person is not self:
                     person.state = enums.COVIDState.EXPOSED
                     person.day_exposed = t
