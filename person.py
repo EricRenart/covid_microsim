@@ -61,18 +61,16 @@ class Individual(Person):
         else:
             self.mask = mask
 
-    def planned_position(self, direction, distancex=1, distancey=1):
-        assert isinstance(direction, enums.Direction)
-        new_x = self.x + (enums.MOVEMENT_DELTAS.get(direction)[0] * distancex)
-        new_y = self.y + (enums.MOVEMENT_DELTAS.get(direction)[1] * distancey)
-        return (new_x, new_y) # Re-indexing to grid coordinates
-
     def planned_position_random(self, max_distancex=5, max_distancey=5, max_x=100, max_y=100):
         # Pick a random position this individual plans to walk to
+        # Magnitudes
         dx = np.random.randint(low=0, high=max_distancex)
         dy = np.random.randint(low=0, high=max_distancey)
-        direction = enums.DIRECTION_BY_ID.get(np.random.randint(0,3))
-        (new_x, new_y) = self.planned_position(direction, distancex=dx, distancey=dy)
+        # Directions
+        direction_vectors = [(0,1), (0,-1), (1,0), (-1,0)] # North, South, East, West
+        chosen_direction = direction_vectors[np.random.randint(0,3)]
+        new_x = self.x + (chosen_direction[0] * dx)
+        new_y = self.y + (chosen_direction[1] * dy)
         # "wrap around" the new position if it is out of bounds
         if new_x < 0:
             new_x = max_x - new_x
@@ -82,7 +80,7 @@ class Individual(Person):
             new_y = max_y - new_y
         if new_y >= max_y:
             new_y = new_y - max_y
-        return (new_x, new_y) # convert to grid coordinates
+        return (new_x, new_y)
 
     def expose(self, persons, t, base_chance=0.35):
         # Expose a list of persons to COVID with the given chance of exposure (modified by mask)

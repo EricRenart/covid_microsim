@@ -18,7 +18,7 @@ def animation_step(i): # Animation update function
 # MAIN PROGRAM
 sns.set()
 
-pop = 100
+pop = 250
 length = 100
 
 stream = logging.StreamHandler(sys.stdout)
