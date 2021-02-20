@@ -1,6 +1,5 @@
 from person import Person, Individual
 import numpy as np
-import seaborn as sns
 from simulation import Simulation
 from matplotlib import pyplot as pp
 from matplotlib.animation import FuncAnimation, FFMpegWriter
@@ -16,14 +15,13 @@ def animation_step(i): # Animation update function
     return scatter,
 
 # MAIN PROGRAM
-sns.set()
 
-pop = 250
-length = 100
+pop = 150
+length = 250
 
 stream = logging.StreamHandler(sys.stdout)
 file = logging.FileHandler(filename='output.txt', mode='w')
-logging.basicConfig(level=logging.INFO, handlers=(stream, file)) # set up an output file and also print to console
+logging.basicConfig(level=logging.DEBUG, handlers=(stream, file)) # set up an output file and also print to console
 print('Starting simulation with population of {} and length {}...'.format(pop, length))
 
 # Create simulation with grid
@@ -34,6 +32,7 @@ fig, ax = pp.subplots(figsize=(12, 12))
 ax.set_xlim(0, sim.size_x)
 ax.set_ylim(0, sim.size_y)
 ax.set_title('COVID simulation, {} individuals, t=0'.format(sim.population()))
+ax.grid(b=True)
 
 frames = sim.run(pop=pop, length=length)
 scatter, = ax.scatter(frames[0][0], frames[0][1], c=frames[0][2], s=5, lw=1),

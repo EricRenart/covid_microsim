@@ -10,7 +10,7 @@ class Person:
             self.age = None
             self.state = None
         else:
-            nationalities = ['en_US', 'en_IE']
+            nationalities = ['en_US']
             fake = faker.Faker(nationalities)
             self.name = fake.name()
             self.birthdate = fake.date_of_birth()
@@ -45,7 +45,7 @@ class Nobody(Person):
         super().__init__()
 
 class Individual(Person):
-    def __init__(self, id, social_distancing_adherence=None, mask=None):
+    def __init__(self, id, social_distancing_adherence=0, mask=enums.Mask.NONE):
         super().__init__()
         self.x = 0 # current position on the grid
         self.y = 0
@@ -61,7 +61,7 @@ class Individual(Person):
         else:
             self.mask = mask
 
-    def planned_position_random(self, max_distancex=5, max_distancey=5, max_x=100, max_y=100):
+    def planned_position_random(self, max_distancex=2, max_distancey=2, max_x=100, max_y=100):
         # Pick a random position this individual plans to walk to
         # Magnitudes
         dx = np.random.randint(low=0, high=max_distancex)

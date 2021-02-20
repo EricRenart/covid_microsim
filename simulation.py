@@ -7,7 +7,7 @@ import logging
 
 class Simulation():
 
-    def __init__(self, size_x=100, size_y=100):
+    def __init__(self, size_x=50, size_y=50):
         self.length = 0
         self.size_x = size_x
         self.size_y = size_y
@@ -32,9 +32,9 @@ class Simulation():
         ind_list = self.list_individuals()
         return '{}x{} grid, {} total slots, \n{} individuals present: \n{}'.format(self.size_x, self.size_y, size, population, ind_list)
 
-    def run(self, pop=50, length=100):
+    def run(self, pop=1000, length=100):
         self.length = length
-        for i in range(0, pop):
+        for i in range(0, pop-1):
             self.add_individual_at_random_location() # Add initial individuals to grid
         logging.info('Running COVID-19 microsimulation with population of {}...'.format(self.population()))
         logging.info('Initial Conditions:\n')
@@ -53,7 +53,7 @@ class Simulation():
 
     def step(self):
         self.t += 1 # Advance the simulation by one time unit
-        self.update_positions() # Have each individual walk a random distance, avoiding encroaching within exposure_distance based on their social distancing modifier
+        self.update_positions()  # Have each individual walk a random distance, avoiding encroaching within exposure_distance based on their social distancing modifier
         for individual in self.individuals(): # Perform exposure check on all individuals within exposure_distance
             if individual.state == COVIDState.INFECTED:
                 close_individuals = self.individuals_within_social_distance(individual.x, individual.y)
@@ -99,18 +99,23 @@ class Simulation():
             max_y = self.size_y
             (current_x, current_y) = (individual.x, individual.y)
             (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y)
+            while self.slot_occupied(planned_x, planned_y): # If the planned space is occupied, get a new set of random coords
+                (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance,
+                                                                            max_distancey=max_walk_distance,
+                                                                            max_x=max_x, max_y=max_y)
             planned_encroachment = len(self.individuals_within_social_distance(planned_x, planned_y)) > 0 # Are there individuals within social distance?
-            if planned_encroachment:
+            while planned_encroachment:
                 if np.random.rand(1) < individual.encroach_chance: # If the individual decides to violate social distancing
                     logging.debug('{} decided to violate social distancing'.format(individual.name)) # violate social distancing anyway
+                    break
                 else:
                     (planned_x, planned_y) = individual.planned_position_random(max_distancex=max_walk_distance, max_distancey=max_walk_distance, max_x=max_x, max_y=max_y) # individual decided to keep social distance this time, pick a new position
-
+                    planned_encroachment = len(self.individuals_within_social_distance(planned_x, planned_y)) > 0  # re-check planned encroooachment
             # Update the actual grid
             self.grid[current_x, current_y] = Nobody() # clear old position
             self.grid[planned_x, planned_y] = individual # set new grid position
-            individual.x = planned_x # update individuals position
-            individual.y = planned_y
+            self.grid[planned_x, planned_y].x = planned_x # update individuals position
+            self.grid[planned_x, planned_y].y = planned_y
 
     def update_counts(self):
         self.reset_counts()
@@ -183,7 +188,7 @@ class Simulation():
         self.next_available_id += 1
 
     def random_coordinates(self):
-        return (np.random.randint(0, self.size_x), np.random.randint(0, self.size_y))
+        return (np.random.randint(0, self.size_x-1), np.random.randint(0, self.size_y-1))
 
     def slot_occupied(self, x, y):
         if isinstance(self.grid[x, y], Individual):
